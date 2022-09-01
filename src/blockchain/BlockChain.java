@@ -9,22 +9,42 @@ import java.util.stream.Collectors;
 public class BlockChain implements Serializable {
 
     private ArrayList<Block> blockChain = new ArrayList<>();
-    private int leadingZeros;
+    private int leadingZeros = 0;
     private static final long serialVersionUID = 1L;
 
-    public BlockChain(int leadingZeros) {
-        this.leadingZeros = leadingZeros;
+    public BlockChain() {
         //loadBlockChain();
     }
 
-    public void generateNewBlock() {
-        String hashOfPreviousBlock = "0";
-        if (!blockChain.isEmpty()) {
-            hashOfPreviousBlock = blockChain.get(blockChain.size() - 1).getBlockHash();
+    public synchronized boolean acceptNewBlock(Block block) {
+        if (getHashOfLastBlock().equals(block.getPreviousBlockHash())
+                && block.getBlockHash().startsWith("0".repeat(leadingZeros))) {
+            blockChain.add(block);
+            //SerializationUtil.serialize(blockChain);
+            System.out.println(block);
+            manageLeadingZeros(block);
+
+            return true;
         }
-        Block block = new Block(hashOfPreviousBlock, leadingZeros);
-        blockChain.add(block);
-        SerializationUtil.serialize(blockChain);
+
+        return false;
+    }
+
+    public synchronized String getHashOfLastBlock() {
+        String hashOfLastBlock = "0";
+        if (!blockChain.isEmpty()) {
+            hashOfLastBlock = blockChain.get(blockChain.size() - 1).getBlockHash();
+        }
+
+        return hashOfLastBlock;
+    }
+
+    public synchronized int getLeadingZeros() {
+        return leadingZeros;
+    }
+
+    public synchronized int getNextBlockId() {
+        return blockChain.size() + 1;
     }
 
     public boolean validate() {
@@ -40,13 +60,24 @@ public class BlockChain implements Serializable {
                 .collect(Collectors.joining("\n\n")));
     }
 
+    private void manageLeadingZeros(Block block) {
+        if (block.getSecondsToGenerate() < 10) {
+            leadingZeros++;
+            System.out.println("N was increased to " + leadingZeros);
+        } else if (block.getSecondsToGenerate() > 60) {
+            leadingZeros--;
+            System.out.println("N was decreased by 1");
+        } else {
+            System.out.println("N stays the same");
+        }
+        System.out.println();
+    }
+
     private void loadBlockChain() {
         var blockChain = (ArrayList<Block>) SerializationUtil.deserialize();
         if (blockChain != null) {
             this.blockChain = blockChain;
-            if (this.validate()) {
-                Block.setNextId(blockChain.get(blockChain.size() - 1).getId() + 1);
-            } else {
+            if (!this.validate()) {
                 this.blockChain.clear();
             }
         }

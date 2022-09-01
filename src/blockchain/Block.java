@@ -7,26 +7,30 @@ import java.util.Date;
 
 public class Block implements Serializable {
 
-    private int id;
-    private long timeStamp;
-    private String previousBlockHash;
+    private final int id;
+    private final int minerId;
+    private final long timeStamp;
+    private final String previousBlockHash;
+    private final long secondsToGenerate;
     private int magicNumber;
-    private long secondsToGenerate;
-    private static int nextId = 1;
     private static final long serialVersionUID = 1L;
 
-    public Block(String previousBlockHash, int leadingZeros) {
+    public Block(int id, int minerId, String previousBlockHash, int leadingZeros) {
         Date startDate = new Date();
-        this.id = nextId++;
+        this.id = id;
+        this.minerId = minerId;
         this.timeStamp = new Date().getTime();
         this.previousBlockHash = previousBlockHash;
         setMagicNumber(leadingZeros);
-        Date endDate = new Date();
-        this.secondsToGenerate = (endDate.getTime() - startDate.getTime()) / 1000;
+        this.secondsToGenerate = (new Date().getTime() - startDate.getTime()) / 1000;
     }
 
     public int getId() {
         return id;
+    }
+
+    public int getMinerId() {
+        return minerId;
     }
 
     public long getTimeStamp() {
@@ -53,6 +57,7 @@ public class Block implements Serializable {
     public String toString() {
         return String.join(System.getProperty("line.separator"),
                 "Block:",
+                "Created by miner # " + getMinerId(),
                 "Id: " + getId(),
                 "Timestamp: " + getTimeStamp(),
                 "Magic number: " + getMagicNumber(),
@@ -61,10 +66,6 @@ public class Block implements Serializable {
                 "Hash of the block:",
                 getBlockHash(),
                 "Block was generating for " + getSecondsToGenerate() + " seconds");
-    }
-
-    public static void setNextId(int nextId) {
-        Block.nextId = nextId;
     }
 
     private void setMagicNumber(int leadingZeros) {
