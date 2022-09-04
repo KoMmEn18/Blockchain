@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 public class BlockChain implements Serializable {
 
     private ArrayList<Block> blockChain = new ArrayList<>();
+    private ArrayList<String> messages = new ArrayList<>();
     private int leadingZeros = 0;
     private static final long serialVersionUID = 1L;
 
@@ -19,6 +20,8 @@ public class BlockChain implements Serializable {
     public synchronized boolean acceptNewBlock(Block block) {
         if (getHashOfLastBlock().equals(block.getPreviousBlockHash())
                 && block.getBlockHash().startsWith("0".repeat(leadingZeros))) {
+            block.setData(messages);
+            messages = new ArrayList<>();
             blockChain.add(block);
             //SerializationUtil.serialize(blockChain);
             System.out.println(block);
@@ -28,6 +31,10 @@ public class BlockChain implements Serializable {
         }
 
         return false;
+    }
+
+    public synchronized void addMessage(String message) {
+        messages.add(message);
     }
 
     public synchronized String getHashOfLastBlock() {

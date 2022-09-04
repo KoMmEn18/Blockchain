@@ -4,6 +4,7 @@ import blockchain.util.StringUtil;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 public class Block implements Serializable {
 
@@ -12,6 +13,7 @@ public class Block implements Serializable {
     private final long timeStamp;
     private final String previousBlockHash;
     private final long secondsToGenerate;
+    private List<String> data;
     private int magicNumber;
     private static final long serialVersionUID = 1L;
 
@@ -53,9 +55,18 @@ public class Block implements Serializable {
         return StringUtil.sha256(id + timeStamp + previousBlockHash + magicNumber);
     }
 
+    public void setData(List<String> data) {
+        this.data = data;
+    }
+
+    public List<String> getData() {
+        return data;
+    }
+
     @Override
     public String toString() {
-        return String.join(System.getProperty("line.separator"),
+        String lineSeparator = System.getProperty("line.separator");
+        return String.join(lineSeparator,
                 "Block:",
                 "Created by miner # " + getMinerId(),
                 "Id: " + getId(),
@@ -65,6 +76,7 @@ public class Block implements Serializable {
                 getPreviousBlockHash(),
                 "Hash of the block:",
                 getBlockHash(),
+                "Block data: " + (getData().isEmpty() ? "no messages" : lineSeparator + String.join(lineSeparator, getData())),
                 "Block was generating for " + getSecondsToGenerate() + " seconds");
     }
 
