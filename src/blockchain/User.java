@@ -5,7 +5,7 @@ import com.github.javafaker.Faker;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
-public class User implements Callable<String> {
+public class User implements Callable<Message> {
     private String name;
     private BlockChain blockChain;
     private Faker faker;
@@ -22,12 +22,17 @@ public class User implements Callable<String> {
     }
 
     @Override
-    public String call() {
-        String message = null;
+    public Message call() {
+        Message message = null;
         if (blockChain.getNextBlockId() != 1) {
             if (random.nextInt(4) == 0) {
-                message = faker.lorem().sentence(10);
-                blockChain.addMessage(getName() + ": " + message);
+                try {
+                    int messageId = blockChain.getNextMessageId();
+                    message = new Message(messageId, faker.lorem().sentence(10), getName());
+                    blockChain.addMessage(message);
+                } catch (Exception e) {
+                    System.out.println("ERROR > Could not create message" + e.getMessage());
+                }
             }
         }
 

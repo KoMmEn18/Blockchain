@@ -9,8 +9,9 @@ import java.util.stream.Collectors;
 public class BlockChain implements Serializable {
 
     private ArrayList<Block> blockChain = new ArrayList<>();
-    private ArrayList<String> messages = new ArrayList<>();
+    private ArrayList<Message> messages = new ArrayList<>();
     private int leadingZeros = 0;
+    private static int messageId = 1;
     private static final long serialVersionUID = 1L;
 
     public BlockChain() {
@@ -18,8 +19,10 @@ public class BlockChain implements Serializable {
     }
 
     public synchronized boolean acceptNewBlock(Block block) {
+        Block previousBlock = blockChain.isEmpty() ? null : blockChain.get(blockChain.size() - 1);
         if (getHashOfLastBlock().equals(block.getPreviousBlockHash())
-                && block.getBlockHash().startsWith("0".repeat(leadingZeros))) {
+                && block.getBlockHash().startsWith("0".repeat(leadingZeros))
+                && (previousBlock == null || messages.stream().allMatch(m -> m.getId() > previousBlock.getMaxMessageId()))) {
             block.setData(messages);
             messages = new ArrayList<>();
             blockChain.add(block);
@@ -33,7 +36,7 @@ public class BlockChain implements Serializable {
         return false;
     }
 
-    public synchronized void addMessage(String message) {
+    public synchronized void addMessage(Message message) {
         messages.add(message);
     }
 
@@ -54,11 +57,25 @@ public class BlockChain implements Serializable {
         return blockChain.size() + 1;
     }
 
+    public synchronized int getNextMessageId() {
+        return messageId++;
+    }
+
     public boolean validate() {
+        VerifyMessage verifyMessage = new VerifyMessage();
+
         return blockChain.stream()
                 .skip(1)
                 .allMatch(block -> block.getPreviousBlockHash()
-                        .equals(blockChain.get(block.getId() - 2).getBlockHash()));
+                        .equals(blockChain.get(block.getId() - 2).getBlockHash()))
+                && blockChain.stream().allMatch(s -> s.getData().stream().allMatch(m -> {
+                    try {
+                        return verifyMessage.verifySignature(m);
+                    } catch (Exception e) {
+                        System.out.println("ERROR > Could not verify message");
+                        return false;
+                    }
+                }));
     }
 
     public void printBlockChain() {

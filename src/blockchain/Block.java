@@ -1,10 +1,12 @@
 package blockchain;
 
+import blockchain.util.IntegerUtil;
 import blockchain.util.StringUtil;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Block implements Serializable {
 
@@ -13,7 +15,7 @@ public class Block implements Serializable {
     private final long timeStamp;
     private final String previousBlockHash;
     private final long secondsToGenerate;
-    private List<String> data;
+    private List<Message> data;
     private int magicNumber;
     private static final long serialVersionUID = 1L;
 
@@ -55,12 +57,16 @@ public class Block implements Serializable {
         return StringUtil.sha256(id + timeStamp + previousBlockHash + magicNumber);
     }
 
-    public void setData(List<String> data) {
+    public void setData(List<Message> data) {
         this.data = data;
     }
 
-    public List<String> getData() {
+    public List<Message> getData() {
         return data;
+    }
+
+    public int getMaxMessageId() {
+        return getData().stream().map(Message::getId).max(Integer::compareTo).orElse(-1);
     }
 
     @Override
@@ -76,7 +82,7 @@ public class Block implements Serializable {
                 getPreviousBlockHash(),
                 "Hash of the block:",
                 getBlockHash(),
-                "Block data: " + (getData().isEmpty() ? "no messages" : lineSeparator + String.join(lineSeparator, getData())),
+                "Block data: " + (getData().isEmpty() ? "no messages" : lineSeparator + getData().stream().map(s -> s.getAuthor() + ": " + s.getContent()).collect(Collectors.joining(lineSeparator))),
                 "Block was generating for " + getSecondsToGenerate() + " seconds");
     }
 
