@@ -11,11 +11,13 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class VerifyMessage {
 
-    public boolean verifySignature(Message message) throws Exception {
+    public boolean verifySignature(Transaction message) throws Exception {
         Signature sig = Signature.getInstance("SHA1withRSA");
         sig.initVerify(getPublic());
-        sig.update(message.getContent().getBytes());
         sig.update(IntegerUtil.intToByteArray(message.getId()));
+        sig.update(IntegerUtil.intToByteArray(message.getValue()));
+        sig.update(message.getSender().getBytes());
+        sig.update(message.getReceiver().getBytes());
 
         return sig.verify(message.getSign());
     }

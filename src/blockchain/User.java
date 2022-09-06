@@ -1,20 +1,16 @@
 package blockchain;
 
-import com.github.javafaker.Faker;
-
+import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.Callable;
 
-public class User implements Callable<Message> {
-    private String name;
-    private BlockChain blockChain;
-    private Faker faker;
-    private static Random random = new Random();
+public class User {
+    protected String name;
+    protected BlockChain blockChain;
+    protected static Random random = new Random();
 
-    public User(String name, BlockChain blockChain, Faker faker) {
+    public User(String name, BlockChain blockChain) {
         this.name = name;
         this.blockChain = blockChain;
-        this.faker = faker;
     }
 
     public String getName() {
@@ -22,20 +18,43 @@ public class User implements Callable<Message> {
     }
 
     @Override
-    public Message call() {
-        Message message = null;
-        if (blockChain.getNextBlockId() != 1) {
-            if (random.nextInt(4) == 0) {
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        User user = (User) o;
+
+        return Objects.equals(name, user.name);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = name.hashCode();
+        return 31 * result;
+    }
+
+    protected Transaction generateRandomTransaction(int randBound) {
+        Transaction transaction = null;
+        if (blockChain.getNextBlockId() != 1 && random.nextInt(randBound) == 0) {
+            int balance = blockChain.getUserBalance(getName());
+            if (balance > 0) {
+                int randomTransactionValue = random.nextInt(balance) + 1;
                 try {
-                    int messageId = blockChain.getNextMessageId();
-                    message = new Message(messageId, faker.lorem().sentence(10), getName());
-                    blockChain.addMessage(message);
+                    int transactionId = blockChain.getNextTransactionId();
+                    transaction = new Transaction(transactionId, randomTransactionValue, getName(), UserProvider.getRandomUser().getName());
+                    blockChain.addTransaction(transaction);
                 } catch (Exception e) {
-                    System.out.println("ERROR > Could not create message" + e.getMessage());
+                    System.out.println("ERROR > Could not create transaction");
                 }
             }
         }
 
-        return message;
+        return transaction;
     }
 }
